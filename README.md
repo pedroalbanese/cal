@@ -28,7 +28,7 @@ Perpetual calendar written in Go
                                                30 31                
 ```
 ### Yearly
-`$ ./cal +`
+`$ ./cal [-year 2023] +`
 ```
                                 2023
          Jan                    Feb                    Mar           
