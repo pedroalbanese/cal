@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/chzyer/readline"
 )
 
 const pageWidth = 80
@@ -21,9 +23,9 @@ var (
 func main() {
 	flag.Parse()
 
-	if flag.Arg(0) == "." {
+	if flag.Arg(0) == "-3" {
 		t := time.Now()
-		year, month, _ := t.Date()
+		year, month, day := t.Date()
 
 		calendars := []string{
 			getCalendar(year, int(month)-1),
@@ -44,13 +46,32 @@ func main() {
 			}, " ")
 		}
 
-		fmt.Println(strings.Join(lines, "\n"))
-	} else if flag.Arg(0) == "+" {
+		// Create a readline instance
+		rl, err := readline.New("")
+		if err != nil {
+			fmt.Println("Erro ao inicializar o readline:", err)
+			return
+		}
+		defer rl.Close()
+
+		dayStr := fmt.Sprintf("%2d", day)
+		dayUnderlined := underline(dayStr)
+
+		lines[2] = strings.Replace(lines[2], dayStr, dayUnderlined, 1)
+
+		for _, line := range lines {
+			fmt.Fprintln(rl.Stdout(), line)
+		}
+	} else if flag.Arg(0) == "-y" {
 		printFullCal(*year)
 	} else {
-		year, month, _ := time.Now().Date()
-		printCal(year, int(month))
+		year, month, day := time.Now().Date()
+		printCalWithUnderline(year, int(month), day)
 	}
+}
+
+func underline(text string) string {
+	return "\033[4m" + text + "\033[0m"
 }
 
 func getCalendar(year, month int) string {
@@ -58,24 +79,44 @@ func getCalendar(year, month int) string {
 	monthName := t.Month().String()
 	cal := fmt.Sprintf("%11s          \nSu Mo Tu We Th Fr Sa \n", monthName[:3])
 
+	// Calculate the number of days in the month
 	lastDay := getDaysInMonth(year, month)
+
+	// Get the starting weekday of the month
 	startWeekday := int(t.Weekday())
 
+	// Initialize the current weekday and week number
 	weekday := startWeekday
 	week := 0
 
+	// Add padding for the first week
 	cal += strings.Repeat("   ", weekday)
 
+	// Iterate over the days of the month
 	for day := 1; day <= lastDay; day++ {
+		// Format the day as a string
 		dayStr := fmt.Sprintf("%2d", day)
+
+		// Check if it's the current day
+		if year == time.Now().Year() && month == int(time.Now().Month()) && day == time.Now().Day() {
+			// Add the underlined day
+			dayStr = "\033[4m" + dayStr + "\033[0m"
+		}
+
+		// Add the day to the calendar
 		cal += dayStr + " "
+
+		// Move to the next weekday
 		weekday = (weekday + 1) % 7
+
+		// Move to the next week if necessary
 		if weekday == 0 && day < lastDay {
 			cal += "\n"
 			week++
 		}
 	}
 
+	// Add padding for the last week if necessary
 	if weekday != 0 {
 		cal += strings.Repeat("   ", 7-weekday)
 		cal += "\n"
@@ -153,7 +194,7 @@ func printFullCal(year int) {
 	}
 }
 
-func printCal(year, month int) {
+func printCalWithUnderline(year, month, currentDay int) {
 	monthName := time.Month(month).String()[:3]
 	fmt.Printf("       %s %d\n", monthName, year)
 	fmt.Println(" Su Mo Tu We Th Fr Sa")
@@ -162,14 +203,34 @@ func printCal(year, month int) {
 	startWeekday := int(startDate.Weekday())
 	daysInMonth := time.Date(year, time.Month(month+1), 0, 0, 0, 0, 0, time.UTC).Day()
 
-	for day := 1; day <= daysInMonth; day++ {
-		if day == 1 {
-			fmt.Printf("%*s", startWeekday*3, "")
+	day := 1
+	lines := []string{}
+	line := ""
+	for week := 0; day <= daysInMonth; week++ {
+		line = ""
+		for weekday := 0; weekday < 7; weekday++ {
+			if week == 0 && weekday < startWeekday {
+				line += "   "
+			} else if day == currentDay {
+				line += " " + underline(fmt.Sprintf("%2d", day))
+				day++
+			} else if day <= daysInMonth {
+				line += fmt.Sprintf(" %2d", day)
+				day++
+			}
 		}
-		fmt.Printf(" %2d", day)
-		if (day+startWeekday)%7 == 0 {
-			fmt.Println()
-		}
+		lines = append(lines, line)
+	}
+
+	rl, err := readline.New("")
+	if err != nil {
+		fmt.Println("Erro ao inicializar o readline:", err)
+		return
+	}
+	defer rl.Close()
+
+	for _, line := range lines {
+		fmt.Fprintln(rl.Stdout(), line)
 	}
 
 	fmt.Println()
