@@ -15,7 +15,7 @@ Perpetual calendar written in Go
  25 26 27 28 29 30
 ```
 ### Quarterly
-`$ ./cal .`
+`$ ./cal -3`
 ```
                                 2023
          May                    Jun                    Jul          
@@ -28,7 +28,7 @@ Perpetual calendar written in Go
                                                30 31                
 ```
 ### Yearly
-`$ ./cal [-year 2023] +`
+`$ ./cal -y`
 ```
                                 2023
          Jan                    Feb                    Mar           
