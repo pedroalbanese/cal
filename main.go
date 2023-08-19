@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chzyer/readline"
+	"github.com/pedroalbanese/readline"
 )
 
 const pageWidth = 80
@@ -23,7 +23,7 @@ var (
 func main() {
 	flag.Parse()
 
-	if flag.Arg(0) == "-3" {
+	if flag.Arg(0) == "." {
 		t := time.Now()
 		year, month, day := t.Date()
 
@@ -46,10 +46,9 @@ func main() {
 			}, " ")
 		}
 
-		// Create a readline instance
 		rl, err := readline.New("")
 		if err != nil {
-			fmt.Println("Erro ao inicializar o readline:", err)
+			fmt.Println("Error initializing readline:", err)
 			return
 		}
 		defer rl.Close()
@@ -62,7 +61,7 @@ func main() {
 		for _, line := range lines {
 			fmt.Fprintln(rl.Stdout(), line)
 		}
-	} else if flag.Arg(0) == "-y" {
+	} else if flag.Arg(0) == "+" {
 		printFullCal(*year)
 	} else {
 		year, month, day := time.Now().Date()
@@ -79,44 +78,31 @@ func getCalendar(year, month int) string {
 	monthName := t.Month().String()
 	cal := fmt.Sprintf("%11s          \nSu Mo Tu We Th Fr Sa \n", monthName[:3])
 
-	// Calculate the number of days in the month
 	lastDay := getDaysInMonth(year, month)
-
-	// Get the starting weekday of the month
 	startWeekday := int(t.Weekday())
 
-	// Initialize the current weekday and week number
 	weekday := startWeekday
 	week := 0
 
-	// Add padding for the first week
 	cal += strings.Repeat("   ", weekday)
 
-	// Iterate over the days of the month
 	for day := 1; day <= lastDay; day++ {
-		// Format the day as a string
 		dayStr := fmt.Sprintf("%2d", day)
 
-		// Check if it's the current day
 		if year == time.Now().Year() && month == int(time.Now().Month()) && day == time.Now().Day() {
 			// Add the underlined day
 			dayStr = "\033[4m" + dayStr + "\033[0m"
 		}
 
-		// Add the day to the calendar
 		cal += dayStr + " "
-
-		// Move to the next weekday
 		weekday = (weekday + 1) % 7
 
-		// Move to the next week if necessary
 		if weekday == 0 && day < lastDay {
 			cal += "\n"
 			week++
 		}
 	}
 
-	// Add padding for the last week if necessary
 	if weekday != 0 {
 		cal += strings.Repeat("   ", 7-weekday)
 		cal += "\n"
@@ -224,7 +210,7 @@ func printCalWithUnderline(year, month, currentDay int) {
 
 	rl, err := readline.New("")
 	if err != nil {
-		fmt.Println("Erro ao inicializar o readline:", err)
+		fmt.Println("Error initializing readline:", err)
 		return
 	}
 	defer rl.Close()
