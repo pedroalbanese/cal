@@ -90,7 +90,6 @@ func getCalendar(year, month int) string {
 		dayStr := fmt.Sprintf("%2d", day)
 
 		if year == time.Now().Year() && month == int(time.Now().Month()) && day == time.Now().Day() {
-			// Add the underlined day
 			dayStr = "\033[4m" + dayStr + "\033[0m"
 		}
 
